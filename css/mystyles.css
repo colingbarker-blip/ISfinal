@@ -1,0 +1,30 @@
+p{
+    font-weight:bold;
+    font-size: 20px;
+}
+
+#top{
+    text-decoration: underline;
+}
+.emphasizedText{
+    font-style: italic;
+    color: blue;
+}
+body{
+    border : 5px solid rgb(255, 255, 255);
+    background-color:rgb(189, 231, 252);
+    font-family:Georgia, 'Times New Roman', Times, serif; 
+    text-align: center;
+
+    margin:60px;
+    padding: 40px
+}
+.list-container {
+    text-align: left;
+    width: 200px;
+    margin: 0 auto;
+}
+.tableauPlaceholder {
+    width: 900px;      /* or max-width: 900px; */
+    margin: 0 auto;
+}

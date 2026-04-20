@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cougar Jump - Final Edition</title>
+    <style>
+        :root {
+            --byu-royal: #002e5d;
+            --byu-white: #ffffff;
+            --u-red: #cc0000;
+            --sky-blue: #87CEEB;
+            --grass-green: #2ecc71;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--byu-royal);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Arial Black', sans-serif;
+            color: var(--byu-white);
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        #game-stage {
+            width: 400px;
+            height: 600px;
+            background: var(--sky-blue);
+            position: relative;
+            overflow: hidden;
+            border: 8px solid var(--byu-white);
+            border-radius: 15px;
+            box-shadow: 0px 10px 30px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+
+        /* --- BUTTON CONTAINER & STYLE --- */
+        .nav-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px; /* Space between the two buttons */
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background-color: var(--byu-royal);
+            color: white;
+            padding: 5px 10px;
+            text-decoration: none;
+            font-size: 11px;
+            border: 2px solid white;
+            border-radius: 8px;
+            font-family: sans-serif;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+
+        .nav-btn:hover {
+            background-color: #004b96;
+        }
+
+        .stats-container {
+            position: absolute;
+            top: 45px; 
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 15px;
+            box-sizing: border-box;
+            z-index: 25;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px var(--byu-royal);
+            pointer-events: none;
+        }
+
+        .score-board {
+            position: absolute;
+            top: 65px; 
+            width: 100%;
+            text-align: center;
+            font-size: 50px;
+            color: white;
+            z-index: 20;
+            text-shadow: 3px 3px var(--byu-royal);
+            pointer-events: none;
+        }
+
+        #cosmo {
+            width: 50px;
+            height: 40px;
+            background: var(--byu-royal);
+            position: absolute;
+            left: 50px;
+            top: 250px;
+            border-radius: 10px;
+            border: 3px solid var(--byu-white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            z-index: 10;
+        }
+
+        .pipe {
+            position: absolute;
+            width: 60px;
+            background: var(--u-red);
+            border: 4px solid #800000;
+            right: -100px;
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20px;
+            background: var(--grass-green);
+            z-index: 15;
+        }
+
+        #message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: var(--byu-royal);
+            padding: 20px 40px;
+            border: 3px solid white;
+            border-radius: 15px;
+            z-index: 30;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>COUGAR JUMP</h1>
+
+    <div id="game-stage">
+        <div class="nav-container">
+            <a href="fromscratch.html" class="nav-btn">SELF-CODED PAGE</a>
+            <a href="index.html" class="nav-btn">RESUMÉ</a>
+        </div>
+
+        <div class="stats-container">
+            <div id="prev-score-display">LAST: 0</div>
+            <div id="best-score-display">BEST: 0</div>
+        </div>
+        <div class="score-board" id="score">0</div>
+        
+        <div id="message">
+            <span style="font-size: 24px;">READY?</span><br><br>
+            CLICK ANYWHERE<br>TO START
+        </div>
+
+        <div id="cosmo">Y</div>
+        <div class="ground"></div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const cosmo = document.getElementById('cosmo');
+            const scoreElement = document.getElementById('score');
+            const message = document.getElementById('message');
+            const stage = document.getElementById('game-stage');
+            const prevDisplay = document.getElementById('prev-score-display');
+            const bestDisplay = document.getElementById('best-score-display');
+
+            let cosmoY = 250;
+            let velocity = 0;
+            let gravity = 0.25; 
+            let jumpPower = -6; 
+            let score = 0;
+            let gameStarted = false;
+            let gameActive = true;
+            let pipes = [];
+
+            let lastScore = localStorage.getItem('lastCosmoScore') || 0;
+            let highScore = localStorage.getItem('bestCosmoScore') || 0;
+            prevDisplay.innerText = `LAST: ${lastScore}`;
+            bestDisplay.innerText = `BEST: ${highScore}`;
+
+            function handleInput(e) {
+                // Prevent jump when clicking either navigation button
+                if (e.target.classList.contains('nav-btn')) return;
+
+                if (e.type === 'keydown' && e.code !== "Space") return;
+                if (e.code === "Space") e.preventDefault();
+
+                if (!gameStarted) {
+                    gameStarted = true;
+                    message.style.display = 'none';
+                    update(); 
+                    return;
+                }
+
+                if (gameActive) {
+                    velocity = jumpPower;
+                } else {
+                    location.reload(); 
+                }
+            }
+
+            window.addEventListener('mousedown', handleInput);
+            window.addEventListener('touchstart', handleInput);
+            window.addEventListener('keydown', handleInput);
+
+            function createPipe() {
+                const gap = 170; 
+                const randomTopHeight = Math.floor(Math.random() * 250) + 50;
+
+                const topPipe = document.createElement('div');
+                topPipe.className = 'pipe';
+                topPipe.style.height = randomTopHeight + 'px';
+                topPipe.style.top = '0';
+                topPipe.style.left = '400px';
+
+                const bottomPipe = document.createElement('div');
+                bottomPipe.className = 'pipe';
+                bottomPipe.style.height = (600 - randomTopHeight - gap) + 'px';
+                bottomPipe.style.bottom = '0';
+                bottomPipe.style.left = '400px';
+
+                stage.appendChild(topPipe);
+                stage.appendChild(bottomPipe);
+                pipes.push({ top: topPipe, bottom: bottomPipe, x: 400, passed: false });
+            }
+
+            function update() {
+                if (!gameActive) return;
+
+                velocity += gravity;
+                cosmoY += velocity;
+                cosmo.style.top = cosmoY + 'px';
+
+                if (pipes.length === 0 || pipes[pipes.length - 1].x < 220) {
+                    createPipe();
+                }
+
+                pipes.forEach((pipeObj, index) => {
+                    pipeObj.x -= 2.5; 
+                    pipeObj.top.style.left = pipeObj.x + 'px';
+                    pipeObj.bottom.style.left = pipeObj.x + 'px';
+
+                    let cRect = cosmo.getBoundingClientRect();
+                    let tRect = pipeObj.top.getBoundingClientRect();
+                    let bRect = pipeObj.bottom.getBoundingClientRect();
+
+                    if (cRect.right > tRect.left && cRect.left < tRect.right && 
+                       (cRect.top < tRect.bottom || cRect.bottom > bRect.top)) {
+                        gameOver();
+                    }
+
+                    if (!pipeObj.passed && pipeObj.x < 50) {
+                        score++;
+                        scoreElement.innerText = score;
+                        pipeObj.passed = true;
+                    }
+
+                    if (pipeObj.x < -100) {
+                        pipeObj.top.remove();
+                        pipeObj.bottom.remove();
+                        pipes.splice(index, 1);
+                    }
+                });
+
+                if (cosmoY > 545 || cosmoY < 0) gameOver();
+
+                requestAnimationFrame(update);
+            }
+
+            function gameOver() {
+                gameActive = false;
+                localStorage.setItem('lastCosmoScore', score);
+                if (score > highScore) {
+                    localStorage.setItem('bestCosmoScore', score);
+                }
+                message.innerHTML = `GAME OVER<br><span style="font-size: 32px;">SCORE: ${score}</span><br><br>CLICK TO RESTART`;
+                message.style.display = 'block';
+            }
+        };
+    </script>
+</body>
+</html>
